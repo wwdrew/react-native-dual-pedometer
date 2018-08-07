@@ -1,8 +1,8 @@
 import React from "react";
-import { HomeScreen } from "./screens";
+import { HomeContainer } from "./containers";
 
 const RNDualPedometerExample = () => (
-    <HomeScreen />
+    <HomeContainer />
 );
 
 export default RNDualPedometerExample;
