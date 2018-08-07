@@ -17,5 +17,4 @@
 #endif
 
 @interface RNDualPedometer : RCTEventEmitter <RCTBridgeModule>
-// Define class properties here with @property
 @end
