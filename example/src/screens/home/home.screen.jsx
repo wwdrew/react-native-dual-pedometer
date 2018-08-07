@@ -1,9 +1,12 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 
-const HomeScreen = () => (
+const HomeScreen = ({ onPress }) => (
     <View style={styles.container}>
         <Text style={styles.welcome}>Welcome to React Native!</Text>
+        <TouchableOpacity onPress={onPress}>
+            <Text style={styles.welcome}>Press to start</Text>
+        </TouchableOpacity>
     </View>
 );
 
