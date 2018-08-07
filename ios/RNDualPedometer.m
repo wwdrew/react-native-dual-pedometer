@@ -31,6 +31,11 @@
 
 RCT_EXPORT_MODULE();
 
++ (BOOL)requiresMainQueueSetup
+{
+    return NO;
+}
+
 RCT_REMAP_METHOD(queryPedometerFromDate,
                  startTime:      (NSDate *)startTime
                  endTime:        (NSDate *)endTime
@@ -118,6 +123,12 @@ RCT_REMAP_METHOD(startPedometerUpdatesFromDate,
 // Will be called when this module's last listener is removed, or on dealloc.
 - (void) stopObserving {
     hasListeners = NO;
+}
+
+- (void) emitMessageToRN: (NSString *)eventName :(NSDictionary *)params {
+    // The bridge eventDispatcher is used to send events from native to JS env
+    // No documentation yet on DeviceEventEmitter: https://github.com/facebook/react-native/issues/2819
+    [self sendEventWithName: eventName body: params];
 }
 
 - (instancetype) init
