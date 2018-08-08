@@ -127,8 +127,8 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
              @"steps": data.numberOfSteps?:[NSNull null],
              @"distance": data.distance?:[NSNull null],
              @"averageActivePace": data.averageActivePace?:[NSNull null],
-             @"currentPace": data.currentPace?:[NSNull null],
-             @"currentCadence": data.currentCadence?:[NSNull null],
+             @"currentPace": data.currentPace?:[NSNumber numberWithInt:0],
+             @"currentCadence": data.currentCadence?:[NSNumber numberWithInt:0],
              };
 }
 
