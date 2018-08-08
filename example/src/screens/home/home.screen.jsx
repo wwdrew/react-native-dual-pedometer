@@ -1,27 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
-
-const displayDate = (dateTime) => {
-    if (!dateTime) {
-        return "--:--:--";
-    }
-
-    const date = new Date(dateTime);
-
-    return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-}
-
-const displayDistance = (distance) => {
-    return `${distance.toFixed(2)}m`;
-}
-
-const displayCadence = (cadence) => {
-    return `${cadence.toFixed(2)} steps/second`;
-}
-
-const displayPace = (pace) => {
-    return `${pace.toFixed(2)} m/s`
-}
+import { displayCadence, displayDate, displayDistance, displayPace } from "./home.helpers";
 
 const HomeScreen = ({
     averageActivePace,
