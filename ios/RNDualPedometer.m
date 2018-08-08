@@ -54,6 +54,14 @@ RCT_REMAP_METHOD(startPedometerUpdatesFromDate,
     resolve(@(YES));
 }
 
+RCT_REMAP_METHOD(stopPedometerUpdates,
+                 eventsResolver:  (RCTPromiseResolveBlock)resolve
+                 eventsRejecter:  (RCTPromiseRejectBlock)reject)
+{
+    [self stopPedometerUpdates];
+    resolve(@(YES));
+}
+
 - (NSArray<NSString *> *)supportedEvents
 {
     return @[@"pedometer:update"];
@@ -95,12 +103,19 @@ RCT_REMAP_METHOD(startPedometerUpdatesFromDate,
     });
 }
 
+- (void) stopPedometerUpdates
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.pedometer stopPedometerUpdates];
+    });
+}
+
 - (NSDictionary *) simulatorPedometerData:(NSDate *)startTime endTime:(NSDate *)endTime {
     
     return @{
              @"startTime": @([startTime timeIntervalSince1970]),
              @"endTime": @([endTime timeIntervalSince1970]),
-             @"value": @(123456),
+             @"steps": @(123456),
              };
 }
 
@@ -109,7 +124,7 @@ RCT_REMAP_METHOD(startPedometerUpdatesFromDate,
     return @{
              @"startTime": @([data.startDate timeIntervalSince1970]),
              @"endTime": @([data.endDate timeIntervalSince1970]),
-             @"value": data.numberOfSteps?:[NSNull null],
+             @"steps": data.numberOfSteps?:[NSNull null],
              };
 }
 
