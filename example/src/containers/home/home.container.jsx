@@ -5,6 +5,8 @@ import RNDualPedometer, { pedometerEmitter } from "react-native-dual-pedometer";
 class HomeContainer extends Component {
 
     state = {
+        currentCadence: 0,
+        currentPace: 0,
         started: false,
         steps: 0
     }
@@ -15,9 +17,13 @@ class HomeContainer extends Component {
             (update) => {
                 console.log(update);
                 this.setState({
-                    steps: update.steps,
+                    averageActivePace: update.averageActivePace,
+                    currentCadence: update.currentCadence,
+                    currentPace: update.currentPace,
+                    distance: update.distance,
+                    endTime: update.endTime,
                     startTime: update.startTime,
-                    endTime: update.endTime
+                    steps: update.steps
                 });
             }
         );
@@ -49,14 +55,27 @@ class HomeContainer extends Component {
     }
 
     render() {
-        const { started, startTime, endTime, steps } = this.state;
+        const {
+            averageActivePace,
+            currentCadence,
+            currentPace,
+            distance,
+            endTime,
+            started,
+            startTime,
+            steps,
+        } = this.state;
 
         return (
             <HomeScreen
+                averageActivePace={averageActivePace}
+                currentCadence={currentCadence}
+                currentPace={currentPace}
+                distance={distance}
+                endTime={endTime}
                 onPress={this.onPress}
                 started={started}
                 startTime={startTime}
-                endTime={endTime}
                 steps={steps}
             />
         );

@@ -11,17 +11,43 @@ const displayDate = (dateTime) => {
     return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 
-const HomeScreen = ({ onPress, started, startTime, endTime, steps }) => (
+const displayDistance = (distance) => {
+    return `${distance.toFixed(2)}m`;
+}
+
+const displayCadence = (cadence) => {
+    return `${cadence.toFixed(2)} steps/second`;
+}
+
+const displayPace = (pace) => {
+    return `${pace.toFixed(2)} m/s`
+}
+
+const HomeScreen = ({
+    averageActivePace,
+    currentCadence,
+    currentPace,
+    distance,
+    endTime,
+    onPress,
+    started,
+    startTime,
+    steps
+}) => (
     <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native!</Text>
+        <Text style={styles.welcome}>RN Dual Pedometer</Text>
         <TouchableOpacity onPress={onPress}>
             <Text style={styles.welcome}>Press to {started ? "stop" : "start"}</Text>
         </TouchableOpacity>
         {started && (
             <>
-                <Text>Steps: {steps}</Text>
                 <Text>Start Time: {displayDate(startTime)}</Text>
                 <Text>End Time: {displayDate(endTime)}</Text>
+                <Text>Steps: {steps}</Text>
+                <Text>Current Cadence: {displayCadence(currentCadence)}</Text>
+                <Text>Current Pace: {displayPace(currentPace)}</Text>
+                <Text>Average Pace: {averageActivePace ? displayPace(averageActivePace) : "N/A"}</Text>
+                <Text>Distance: {distance ? displayDistance(distance) : "N/A"}</Text>
             </>
         )}
     </View>
