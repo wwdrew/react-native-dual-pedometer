@@ -122,9 +122,13 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 - (NSDictionary *) devicePedometerData:(CMPedometerData *)data {
     
     return @{
-             @"startTime": @([data.startDate timeIntervalSince1970]),
-             @"endTime": @([data.endDate timeIntervalSince1970]),
+             @"startTime": @([data.startDate timeIntervalSince1970] * 1000),
+             @"endTime": @([data.endDate timeIntervalSince1970] * 1000),
              @"steps": data.numberOfSteps?:[NSNull null],
+             @"distance": data.distance?:[NSNull null],
+             @"averageActivePace": data.averageActivePace?:[NSNull null],
+             @"currentPace": data.currentPace?:[NSNull null],
+             @"currentCadence": data.currentCadence?:[NSNull null],
              };
 }
 

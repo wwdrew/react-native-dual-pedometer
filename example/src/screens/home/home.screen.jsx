@@ -6,7 +6,7 @@ const displayDate = (dateTime) => {
         return "--:--:--";
     }
 
-    const date = new Date(dateTime * 1000);
+    const date = new Date(dateTime);
 
     return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
