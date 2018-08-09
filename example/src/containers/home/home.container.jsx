@@ -38,10 +38,10 @@ class HomeContainer extends Component {
             try {
                 const now = new Date();
                 const result = await RNDualPedometer.startPedometerUpdatesFromDate(now);
-                this.setState({ started: true });
+                this.setState({ started: result });
                 console.log("START RESULT: ", result);
             } catch (e) {
-                console.log("Starting failed");
+                console.log("Starting failed", e.message);
             }
         } else {
             try {
@@ -49,7 +49,7 @@ class HomeContainer extends Component {
                 this.setState({ started: false, steps: 0 });
                 console.log("STOP RESULT: ", result);
             } catch (e) {
-                console.log("Stopping failed");
+                console.log("Stopping failed", e.message);
             }
         }
     }

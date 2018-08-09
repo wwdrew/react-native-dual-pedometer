@@ -5,6 +5,7 @@ def safeExtGet(prop, fallback) {
 buildscript {
     repositories {
         jcenter()
+        maven { url 'https://maven.google.com' }
     }
 
     dependencies {
@@ -31,9 +32,13 @@ android {
 
 repositories {
     mavenCentral()
+    maven { url 'https://maven.google.com' }
 }
 
 dependencies {
+    def googlePlayServicesVersion = safeExtGet('googlePlayServicesVersion', "11.6.0")
+
     compile 'com.facebook.react:react-native:+'
+    compile "com.google.android.gms:play-services-auth:$googlePlayServicesVersion"
+    compile "com.google.android.gms:play-services-fitness:$googlePlayServicesVersion"
 }
-  
