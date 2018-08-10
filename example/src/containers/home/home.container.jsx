@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { HomeScreen } from "../../screens";
-import RNDualPedometer, { pedometerEmitter } from "react-native-dual-pedometer";
+import RNDualPedometer from "react-native-dual-pedometer";
 
 class HomeContainer extends Component {
 
@@ -12,7 +12,7 @@ class HomeContainer extends Component {
     }
 
     componentDidMount() {
-        pedometerEmitter.addListener(
+        RNDualPedometer.addListener(
             "pedometer:update",
             (update) => {
                 console.log(update);
