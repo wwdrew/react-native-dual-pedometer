@@ -2,16 +2,17 @@
 {
   "name": "react-native-dual-pedometer",
   "version": "1.0.0",
-  "description": "",
+  "description": "A React Native bridge that provides a native pedometer service.",
   "main": "index.js",
+  "typings": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "react-native"
   ],
-  "author": "",
-  "license": "",
+  "author": "Drew Miller",
+  "license": "MIT",
   "peerDependencies": {
     "react-native": "^0.41.2"
   }
