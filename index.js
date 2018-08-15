@@ -2,12 +2,19 @@
 import { NativeEventEmitter, NativeModules } from 'react-native';
 
 const { RNDualPedometer } = NativeModules;
-
-export const pedometerEmitter = new NativeEventEmitter(RNDualPedometer);
+const pedometerEmitter = new NativeEventEmitter(RNDualPedometer);
 
 export default {
-    addListener: pedometerEmitter.addListener,
-    queryPedometerFromDate: RNDualPedometer.queryPedometerFromDate,
-    startPedometerUpdatesFromDate: RNDualPedometer.startPedometerUpdatesFromDate,
-    stopPedometerUpdates: RNDualPedometer.stopPedometerUpdates
+    addListener(event, callback) {
+        pedometerEmitter.addListener(event, callback);
+    },
+    startPedometerUpdatesFromDate(startTime) {
+        return RNDualPedometer.startPedometerUpdatesFromDate(startTime);
+    },
+    startPedometerUpdatesFromDate(startTime) {
+        RNDualPedometer.startPedometerUpdatesFromDate(startTime);
+    },
+    stopPedometerUpdates() {
+        RNDualPedometer.stopPedometerUpdates();
+    }
 };
