@@ -9,6 +9,8 @@
 
 `$ react-native link react-native-dual-pedometer`
 
+For iOS, see *Additional iOS Installation* instructions below
+
 ### Manual installation
 
 
@@ -17,7 +19,31 @@
 1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
 2. Go to `node_modules` ➜ `react-native-dual-pedometer` and add `RNDualPedometer.xcodeproj`
 3. In XCode, in the project navigator, select your project. Add `libRNDualPedometer.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
-4. Run your project (`Cmd+R`)<
+4. Run your project (`Cmd+R`)
+
+#### Additional iOS Installation
+
+Add an entry to your `Info.plist`:
+
+### Using XCode
+
+Select your `Info.plist` file from your application files and add a new entry:
+
+- Property: `Privacy - Motion Usage Description`
+- Value: (reason for requiring Pedometer permissions)
+
+### Editing Info.plist manually
+
+Add the following to your `Info.plist` file:
+
+```
+<dict>
+    ....
+    <key>NSMotionUsageDescription</key>
+    <string>(reason for requiring Pedometer permissions)</string>
+    ....
+</dict>
+```
 
 #### Android
 
@@ -34,6 +60,7 @@
       compile project(':react-native-dual-pedometer')
   	```
 
+4. 
 
 ## Usage
 ```javascript
