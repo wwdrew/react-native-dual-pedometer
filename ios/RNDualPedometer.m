@@ -1,5 +1,6 @@
 #import "RNDualPedometer.h"
 #import <CoreMotion/CoreMotion.h>
+#import "RCTConvert.h"
 
 // import RCTBridge
 #if __has_include(<React/RCTBridge.h>)
@@ -33,7 +34,7 @@ RCT_EXPORT_MODULE();
 
 + (BOOL)requiresMainQueueSetup
 {
-    return NO;
+    return YES;
 }
 
 RCT_REMAP_METHOD(queryPedometerFromDate,
@@ -46,13 +47,13 @@ RCT_REMAP_METHOD(queryPedometerFromDate,
 }
 
 RCT_REMAP_METHOD(startPedometerUpdatesFromDate,
-                 startTime:       (NSString *)startTime
+                 startTime:       (NSDate *)startTime
                  eventsResolver:  (RCTPromiseResolveBlock)resolve
                  eventsRejecter:  (RCTPromiseRejectBlock)reject)
 {
     NSLog(@"RNDualPedometer - Start Pedometer Updates From Date - Start Time: %@", startTime);
     
-    [self startPedometerUpdatesFromDate:[self getDateFromISO8601:startTime]];
+    [self startPedometerUpdatesFromDate:startTime];
     resolve(@(YES));
 }
 
@@ -69,7 +70,7 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     return @[@"pedometer:update"];
 }
 
-- (void) queryPedometerFromDate:(NSString *)startTime endTime:(NSString *)endTime queryResolver:(RCTPromiseResolveBlock)resolve queryRejecter:(RCTPromiseRejectBlock)reject
+- (void) queryPedometerFromDate:(NSDate *)startTime endTime:(NSDate *)endTime queryResolver:(RCTPromiseResolveBlock)resolve queryRejecter:(RCTPromiseRejectBlock)reject
 {
     NSLog(@"query pedometer start date: %@", startTime);
     NSLog(@"query pedometer end date: %@", endTime);
@@ -80,8 +81,8 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 #else
     NSLog(@"Running on device");
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.pedometer queryPedometerDataFromDate:[self getDateFromISO8601:startTime]
-                                            toDate:[self getDateFromISO8601:endTime]
+        [self.pedometer queryPedometerDataFromDate:startTime
+                                            toDate:endTime
                                        withHandler:^(CMPedometerData *pedometerData, NSError *error) {
                                            if (!error) {
                                                resolve([self devicePedometerData:pedometerData]);
@@ -96,25 +97,18 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 - (void) startPedometerUpdatesFromDate:(NSDate *)startTime
 {
     NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.pedometer startPedometerUpdatesFromDate:startTime
-                                          withHandler:^(CMPedometerData *pedometerData, NSError *error) {
-                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                  [self emitMessageToRN:@"pedometer:update" :[self devicePedometerData:pedometerData]];
-                                              });
-                                          }];
-    });
+    [self.pedometer startPedometerUpdatesFromDate:startTime
+                                      withHandler:^(CMPedometerData *pedometerData, NSError *error) {
+                                          [self emitMessageToRN:@"pedometer:update" :[self devicePedometerData:pedometerData]];
+                                      }];
 }
 
 - (void) stopPedometerUpdates
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.pedometer stopPedometerUpdates];
-    });
+    [self.pedometer stopPedometerUpdates];
 }
 
 - (NSDictionary *) simulatorPedometerData:(NSDate *)startTime endTime:(NSDate *)endTime {
-    
     return @{
              @"startTime": [self getISO8601FromDate:startTime],
              @"endTime": [self getISO8601FromDate:endTime],
@@ -152,20 +146,11 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     [self sendEventWithName: eventName body: params];
 }
 
-- (NSDate *)getDateFromISO8601:(NSString *)strDate{
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
-    NSLocale *posix = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
-    [formatter setLocale:posix];
-    
-    return [formatter dateFromString:strDate];
-}
-
 - (NSString *)getISO8601FromDate:(NSDate *)date{
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
-    NSLocale *posix = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
-    [formatter setLocale:posix];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"];
+    [formatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
+    [formatter setTimeZone:[[NSTimeZone alloc] initWithName:@"UTC"]];
     
     return [formatter stringFromDate:date];
 }
