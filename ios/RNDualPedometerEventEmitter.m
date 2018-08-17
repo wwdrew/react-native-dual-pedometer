@@ -18,6 +18,9 @@
 #import “React/RCTEventDispatcher.h” // Required when used as a Pod in a Swift project
 #endif
 
+// Event Names
+NSString *const rnPedometerUpdate = @"pedometer:update";
+
 @interface RNDualPedometerEventEmitter ()
 @end
 
@@ -32,22 +35,25 @@ RCT_EXPORT_MODULE();
     return YES;
 }
 
-- (NSArray<NSString *> *)supportedEvents
-{
-    return @[@"pedometer:update"];
+- (NSDictionary<NSString *, NSString *> *)constantsToExport {
+    return @{
+             @"PEDOMETER_UPDATE": rnPedometerUpdate,
+             };
 }
 
-+ (void)pedometerUpdate
+- (NSArray<NSString *> *)supportedEvents
 {
-    NSLog(@"PLEASE DO SOMETHING");
-    [self postNotificationName:@"pedometer:update" withPayload:@"PRETTYPLEASE"];
+    return @[rnPedometerUpdate];
+}
+
++ (void)pedometerUpdate:(NSDictionary *)pedometerData
+{
+    [self postNotificationName:rnPedometerUpdate withPayload:pedometerData];
 }
 
 #pragma mark - Private methods
 
-+ (void)postNotificationName:(NSString *)name withPayload:(NSObject *)object {
-    NSDictionary<NSString *, id> *payload = @{@"payload": object};
-    
++ (void)postNotificationName:(NSString *)name withPayload:(NSDictionary *)payload {
     [[NSNotificationCenter defaultCenter] postNotificationName:name
                                                         object:self
                                                       userInfo:payload];
@@ -69,17 +75,5 @@ RCT_EXPORT_MODULE();
 - (void)handleNotification:(NSNotification *)notification {
     [self sendEventWithName:notification.name body:notification.userInfo];
 }
-
-//- (instancetype) init
-//{
-//    self = [super init];
-//    if (self == nil) {
-//        return nil;
-//    }
-//
-//    _pedometer = [[CMPedometer alloc] init];
-//
-//    return self;
-//}
 
 @end

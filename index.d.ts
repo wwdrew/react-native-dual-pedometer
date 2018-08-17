@@ -8,7 +8,12 @@ export interface PedometerResponse {
     currentCadence?: number;
 }
 
+interface PedometerConstants {
+    PEDOMETER_UPDATE: string;
+}
+
 declare const RNDualPedometer: {
+    constants: PedometerConstants;
     addListener: (eventName: string, callback: any) => null;
     queryPedometerFromDate: (startTime: string, endTime?: string) => Promise<PedometerResponse>;
     startPedometerUpdatesFromDate: (startTime: string) => null;

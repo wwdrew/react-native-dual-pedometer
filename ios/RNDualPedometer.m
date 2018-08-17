@@ -93,8 +93,7 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
     [self.pedometer startPedometerUpdatesFromDate:startTime
                                       withHandler:^(CMPedometerData *pedometerData, NSError *error) {
-                                          [RNDualPedometerEventEmitter pedometerUpdate];
-//                                          [self emitMessageToRN:@"pedometer:update" :[self devicePedometerData:pedometerData]];
+                                          [RNDualPedometerEventEmitter pedometerUpdate:[self devicePedometerData:pedometerData]];
                                       }];
 }
 

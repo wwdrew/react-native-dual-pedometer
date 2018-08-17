@@ -18,6 +18,6 @@
 
 @interface RNDualPedometerEventEmitter : RCTEventEmitter <RCTBridgeModule>
 
-+(void)pedometerUpdate;
++ (void)pedometerUpdate:(NSObject *)pedometerData;
 
 @end
