@@ -37,7 +37,9 @@ RCT_EXPORT_MODULE();
 
 - (NSDictionary<NSString *, NSString *> *)constantsToExport {
     return @{
-             @"PEDOMETER_UPDATE": rnPedometerUpdate,
+             @"constants": @{
+                     @"PEDOMETER_UPDATE": rnPedometerUpdate,
+                     }
              };
 }
 
