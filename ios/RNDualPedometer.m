@@ -91,7 +91,8 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 - (void) startPedometerUpdatesFromDate:(NSDate *)startTime
 {
 #if TARGET_IPHONE_SIMULATOR
-    NSLog(@"RNDualPedometer - Running on simulator, query not executed");
+    NSLog(@"RNDualPedometer - Running on simulator, generating simulated results");
+    [RNDualPedometerEventEmitter pedometerUpdate:[self simulatorPedometerData:startTime endTime:nil]];
 #else
     NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
     [self.pedometer startPedometerUpdatesFromDate:startTime
@@ -106,7 +107,12 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     [self.pedometer stopPedometerUpdates];
 }
 
-- (NSDictionary *) simulatorPedometerData:(NSDate *)startTime endTime:(NSDate *)endTime {
+- (NSDictionary *) simulatorPedometerData:(NSDate *)startTime endTime:(NSDate *)endTime
+{
+    if (endTime == nil) {
+        endTime = [NSDate date];
+    }
+
     return @{
              @"startTime": [self getISO8601FromDate:startTime],
              @"endTime": [self getISO8601FromDate:endTime],
@@ -114,7 +120,8 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
              };
 }
 
-- (NSDictionary *) devicePedometerData:(CMPedometerData *)data {
+- (NSDictionary *) devicePedometerData:(CMPedometerData *)data
+{
     return @{
              @"startTime": [self getISO8601FromDate:data.startDate],
              @"endTime": [self getISO8601FromDate:data.endDate],
@@ -128,7 +135,8 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 
 #pragma mark - Private methods
 
-- (NSString *)getISO8601FromDate:(NSDate *)date{
+- (NSString *)getISO8601FromDate:(NSDate *)date
+{
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"];
     [formatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
