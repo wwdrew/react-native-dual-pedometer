@@ -1,8 +1,8 @@
 
 import { NativeEventEmitter, NativeModules } from 'react-native';
 
-const { RNDualPedometer } = NativeModules;
-const pedometerEmitter = new NativeEventEmitter(RNDualPedometer);
+const { RNDualPedometer, RNDualPedometerEventEmitter } = NativeModules;
+const pedometerEmitter = new NativeEventEmitter(RNDualPedometerEventEmitter);
 
 export default {
     addListener(event, callback) {
