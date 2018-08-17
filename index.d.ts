@@ -10,7 +10,7 @@ export interface PedometerResponse {
 
 declare const RNDualPedometer: {
     addListener: (eventName: string, callback: any) => null;
-    queryPedometerFromDate: (startTime: string) => Promise<PedometerResponse>;
+    queryPedometerFromDate: (startTime: string, endTime?: string) => Promise<PedometerResponse>;
     startPedometerUpdatesFromDate: (startTime: string) => null;
     stopPedometerUpdates: () => null;
 }

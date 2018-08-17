@@ -8,8 +8,8 @@ export default {
     addListener(event, callback) {
         pedometerEmitter.addListener(event, callback);
     },
-    startPedometerUpdatesFromDate(startTime) {
-        return RNDualPedometer.startPedometerUpdatesFromDate(startTime);
+    queryPedometerFromDate(startTime, endTime) {
+        return RNDualPedometer.queryPedometerFromDate(startTime, endTime);
     },
     startPedometerUpdatesFromDate(startTime) {
         RNDualPedometer.startPedometerUpdatesFromDate(startTime);
