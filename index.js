@@ -1,10 +1,19 @@
-import { NativeEventEmitter, NativeModules } from "react-native";
+import { DeviceEventEmitter, NativeEventEmitter, NativeModules, Platform } from "react-native";
 
 const { RNDualPedometer, RNDualPedometerEventEmitter } = NativeModules;
-const pedometerEmitter = new NativeEventEmitter(RNDualPedometerEventEmitter);
+
+const pedometerEmitter = Platform.select({
+    android: DeviceEventEmitter,
+    ios: new NativeEventEmitter(RNDualPedometerEventEmitter)
+})
+
+const pedometerConstants = Platform.select({
+    android: RNDualPedometer.constants,
+    ios: pedometerEmitter.constants
+});
 
 export default {
-    constants: RNDualPedometerEventEmitter.constants,
+    constants: pedometerConstants,
     addListener(event, callback) {
         pedometerEmitter.addListener(event, callback);
     },
