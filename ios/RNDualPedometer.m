@@ -90,11 +90,15 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 
 - (void) startPedometerUpdatesFromDate:(NSDate *)startTime
 {
+#if TARGET_IPHONE_SIMULATOR
+    NSLog(@"RNDualPedometer - Running on simulator, query not executed");
+#else
     NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
     [self.pedometer startPedometerUpdatesFromDate:startTime
                                       withHandler:^(CMPedometerData *pedometerData, NSError *error) {
                                           [RNDualPedometerEventEmitter pedometerUpdate:[self devicePedometerData:pedometerData]];
                                       }];
+#endif
 }
 
 - (void) stopPedometerUpdates
