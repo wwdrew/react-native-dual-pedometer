@@ -2,6 +2,7 @@ package com.wwdrew.reactnative;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import com.facebook.react.bridge.ActivityEventListener;
@@ -18,13 +19,14 @@ import org.joda.time.DateTime;
 public class RNDualPedometerManager implements ActivityEventListener {
 
     public static final String PEDOMETER_UPDATE = "pedometer:update";
-
     private static final String TAG = "RNDualPedometer";
 
+    private boolean isSimulator;
     private ReactApplicationContext reactContext;
 
     public RNDualPedometerManager(ReactApplicationContext context) {
         this.reactContext = context;
+        this.isSimulator = checkIsSimulator();
     }
 
     private FitnessOptions getFitnessOptions() {
@@ -49,15 +51,11 @@ public class RNDualPedometerManager implements ActivityEventListener {
     public void startPedometerUpdatesFromDate(DateTime dateTime) {
         Log.d(TAG, String.format("Manager Start Pedometer Updates From Date: %s", dateTime));
 
-        WritableMap payload = Arguments.createMap();
-
-        payload.putInt("steps", 23456);
-        payload.putString("startTime", dateTime.toString());
-        payload.putString("endTime", new DateTime().toString());
-
-        this.reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit(PEDOMETER_UPDATE, payload);
+        if (isSimulator) {
+            emitEvent(PEDOMETER_UPDATE, getSimulatedPayload(dateTime));
+        } else {
+            emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dateTime));
+        }
 //        if (isAuthorised()) {
 //            Log.d(TAG, String.format("Authorised: Starting Pedometer Updates from date: %s", date));
 //            return true;
@@ -74,6 +72,40 @@ public class RNDualPedometerManager implements ActivityEventListener {
 
     @Override
     public void onNewIntent(Intent intent) {
+    }
 
+    // TODO hook this up to pedometer
+    private WritableMap mapPedometerPayload(DateTime dateTime) {
+        WritableMap payload = Arguments.createMap();
+
+        payload.putInt("steps", 12345);
+        payload.putString("startTime", dateTime.toString());
+        payload.putString("endTime", new DateTime().toString());
+
+        return payload;
+    }
+
+    private WritableMap getSimulatedPayload(DateTime dateTime) {
+        WritableMap payload = Arguments.createMap();
+
+        payload.putInt("steps", 23456);
+        payload.putString("startTime", dateTime.toString());
+        payload.putString("endTime", new DateTime().toString());
+
+        return payload;
+    }
+
+    private boolean checkIsSimulator() {
+        return (
+                Build.PRODUCT.toLowerCase().contains("sdk") &&
+                Build.MODEL.toLowerCase().contains("sdk")
+        );
+    }
+
+
+    private void emitEvent(String eventName, Object payload) {
+        this.reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, payload);
     }
 }
