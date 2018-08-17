@@ -1,4 +1,5 @@
 #import "RNDualPedometer.h"
+#import "RNDualPedometerEventEmitter.h"
 #import <CoreMotion/CoreMotion.h>
 #import "RCTConvert.h"
 
@@ -24,9 +25,7 @@
 @property (nonatomic, readonly) CMPedometer *pedometer;
 @end
 
-@implementation RNDualPedometer {
-    bool hasListeners;
-}
+@implementation RNDualPedometer
 
 @synthesize bridge = _bridge;
 
@@ -65,11 +64,6 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     resolve(@(YES));
 }
 
-- (NSArray<NSString *> *)supportedEvents
-{
-    return @[@"pedometer:update"];
-}
-
 - (void) queryPedometerFromDate:(NSDate *)startTime endTime:(NSDate *)endTime queryResolver:(RCTPromiseResolveBlock)resolve queryRejecter:(RCTPromiseRejectBlock)reject
 {
     NSLog(@"query pedometer start date: %@", startTime);
@@ -99,11 +93,8 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
     [self.pedometer startPedometerUpdatesFromDate:startTime
                                       withHandler:^(CMPedometerData *pedometerData, NSError *error) {
-                                          if (hasListeners) {
-                                              [self emitMessageToRN:@"pedometer:update" :[self devicePedometerData:pedometerData]];
-                                          } else {
-                                              NSLog(@"RNDualPedometer - No Listeners for updates");
-                                          }
+                                          [RNDualPedometerEventEmitter pedometerUpdate];
+//                                          [self emitMessageToRN:@"pedometer:update" :[self devicePedometerData:pedometerData]];
                                       }];
 }
 
@@ -133,22 +124,6 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 }
 
 #pragma mark - Private methods
-
-// Will be called when this module's first listener is added.
-- (void) startObserving {
-    hasListeners = YES;
-}
-
-// Will be called when this module's last listener is removed, or on dealloc.
-- (void) stopObserving {
-    hasListeners = NO;
-}
-
-- (void) emitMessageToRN: (NSString *)eventName :(NSDictionary *)params {
-    // The bridge eventDispatcher is used to send events from native to JS env
-    // No documentation yet on DeviceEventEmitter: https://github.com/facebook/react-native/issues/2819
-    [self sendEventWithName: eventName body: params];
-}
 
 - (NSString *)getISO8601FromDate:(NSDate *)date{
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];

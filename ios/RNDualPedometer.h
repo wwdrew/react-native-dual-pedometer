@@ -16,5 +16,5 @@
 #import “React/RCTEventEmitter.h” // Required when used as a Pod in a Swift project
 #endif
 
-@interface RNDualPedometer : RCTEventEmitter <RCTBridgeModule>
+@interface RNDualPedometer : NSObject <RCTBridgeModule>
 @end
