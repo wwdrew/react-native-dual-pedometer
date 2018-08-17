@@ -8,6 +8,8 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
+import org.joda.time.DateTime;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +23,7 @@ public class RNDualPedometerModule extends ReactContextBaseJavaModule {
     public RNDualPedometerModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
+        rnDualPedometerManager = new RNDualPedometerManager(this.reactContext);
     }
 
     @Override
@@ -39,14 +42,11 @@ public class RNDualPedometerModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void startPedometerUpdatesFromDate(String date, Promise promise) {
+    public void startPedometerUpdatesFromDate(String date) {
         Log.d(TAG, String.format("startPedometerUpdatesFromDate: %s", date));
+        DateTime dateTime = new DateTime(date);
 
-        if (rnDualPedometerManager == null) {
-            rnDualPedometerManager = new RNDualPedometerManager(reactContext);
-        }
-
-        promise.resolve(rnDualPedometerManager.startPedometerUpdatesFromDate(date));
+        rnDualPedometerManager.startPedometerUpdatesFromDate(dateTime);
     }
 
     @ReactMethod

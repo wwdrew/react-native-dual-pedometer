@@ -5,12 +5,19 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 
+import org.joda.time.DateTime;
+
 public class RNDualPedometerManager implements ActivityEventListener {
+
+    public static final String PEDOMETER_UPDATE = "pedometer:update";
 
     private static final String TAG = "RNDualPedometer";
 
@@ -39,16 +46,25 @@ public class RNDualPedometerManager implements ActivityEventListener {
         return authorised;
     }
 
-    public boolean startPedometerUpdatesFromDate(String date) {
-        Log.d(TAG, "Manager Start Pedometer Updates From Date");
+    public void startPedometerUpdatesFromDate(DateTime dateTime) {
+        Log.d(TAG, String.format("Manager Start Pedometer Updates From Date: %s", dateTime));
 
-        if (isAuthorised()) {
-            Log.d(TAG, String.format("Authorised: Starting Pedometer Updates from date: %s", date));
-            return true;
-        } else {
-            Log.d(TAG, "NOT Authorised: Unable to start pedometer updates");
-            return false;
-        }
+        WritableMap payload = Arguments.createMap();
+
+        payload.putInt("steps", 23456);
+        payload.putString("startTime", dateTime.toString());
+        payload.putString("endTime", new DateTime().toString());
+
+        this.reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(PEDOMETER_UPDATE, payload);
+//        if (isAuthorised()) {
+//            Log.d(TAG, String.format("Authorised: Starting Pedometer Updates from date: %s", date));
+//            return true;
+//        } else {
+//            Log.d(TAG, "NOT Authorised: Unable to start pedometer updates");
+//            return false;
+//        }
     }
 
     @Override
