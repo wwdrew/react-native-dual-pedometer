@@ -51,18 +51,17 @@ public class RNDualPedometerManager implements ActivityEventListener {
     public void startPedometerUpdatesFromDate(DateTime dateTime) {
         Log.d(TAG, String.format("Manager Start Pedometer Updates From Date: %s", dateTime));
 
-        if (isSimulator) {
-            emitEvent(PEDOMETER_UPDATE, getSimulatedPayload(dateTime));
+        if (isAuthorised()) {
+            Log.d(TAG, String.format("Authorised: Starting Pedometer Updates from date: %s", dateTime));
+
+            if (isSimulator) {
+                emitEvent(PEDOMETER_UPDATE, getSimulatedPayload(dateTime));
+            } else {
+                emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dateTime));
+            }
         } else {
-            emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dateTime));
+            Log.d(TAG, "NOT Authorised: Unable to start pedometer updates");
         }
-//        if (isAuthorised()) {
-//            Log.d(TAG, String.format("Authorised: Starting Pedometer Updates from date: %s", date));
-//            return true;
-//        } else {
-//            Log.d(TAG, "NOT Authorised: Unable to start pedometer updates");
-//            return false;
-//        }
     }
 
     @Override
