@@ -34,7 +34,7 @@ public class RNDualPedometerModule extends ReactContextBaseJavaModule {
     @Override
     public Map<String, Object> getConstants() {
         HashMap<String, Object> pedometerConstants = new HashMap<>();
-        pedometerConstants.put("PEDOMETER_UPDATE", "pedometer:update");
+        pedometerConstants.put("PEDOMETER_UPDATE", RNDualPedometerManager.PEDOMETER_UPDATE);
 
         final Map<String, Object> constants = new HashMap<>();
         constants.put("constants", pedometerConstants);
