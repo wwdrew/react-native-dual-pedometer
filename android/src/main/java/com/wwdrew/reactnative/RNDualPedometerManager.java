@@ -36,6 +36,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     private ReactApplicationContext mReactContext;
     private GoogleSignInManager mGoogleSignInManager;
     private OnDataPointListener mListener;
+    private Integer mBaseSteps;
 
     public RNDualPedometerManager(ReactApplicationContext context) {
         super(context);
@@ -137,6 +138,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
         if (isAuthorised()) {
             Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
                     .remove(mListener);
+            mBaseSteps = null;
         } else {
             Log.d(TAG, "NOT Authorised: Unable to stop pedometer updates");
         }
@@ -187,7 +189,13 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     private WritableMap mapPedometerPayload(DataPoint dataPoint) {
         WritableMap payload = Arguments.createMap();
 
-        payload.putInt("steps", dataPoint.getValue(Field.FIELD_STEPS).asInt());
+        int dataPointSteps = dataPoint.getValue(Field.FIELD_STEPS).asInt();
+
+        if (mBaseSteps == null) {
+            mBaseSteps = dataPointSteps;
+        }
+
+        payload.putInt("steps", dataPointSteps - mBaseSteps);
         payload.putString("startTime", new DateTime(dataPoint.getStartTime(TimeUnit.MILLISECONDS)).toString());
         payload.putString("endTime", new DateTime(dataPoint.getEndTime(TimeUnit.MILLISECONDS)).toString());
         payload.putString("testing", dataPoint.toString());
