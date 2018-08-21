@@ -1,13 +1,10 @@
 package com.wwdrew.reactnative;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -15,19 +12,13 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataPoint;
-import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.request.DataSourcesRequest;
 import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.request.SensorRequest;
-import com.google.android.gms.fitness.result.DataSourcesResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -42,15 +33,14 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     private static final String TAG = "RNDualPedometer";
     private static final String REACT_MODULE = "RNGoogleFit";
 
-    private boolean isSimulator;
-    private ReactApplicationContext reactContext;
+    private ReactApplicationContext mReactContext;
     private GoogleSignInManager mGoogleSignInManager;
+    private OnDataPointListener mListener;
 
     public RNDualPedometerManager(ReactApplicationContext context) {
         super(context);
-        this.reactContext = context;
-        this.mGoogleSignInManager = new GoogleSignInManager(this.reactContext);
-        this.isSimulator = checkIsSimulator();
+        this.mReactContext = context;
+        this.mGoogleSignInManager = new GoogleSignInManager(mReactContext);
     }
 
     @Override
@@ -78,133 +68,93 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
     private FitnessOptions getFitnessOptions() {
         return FitnessOptions.builder()
-                .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                .addDataType(DataType.TYPE_STEP_COUNT_CADENCE)
-                .addDataType(DataType.TYPE_SPEED)
-                .addDataType(DataType.TYPE_DISTANCE_DELTA)
-                .addDataType(DataType.TYPE_ACTIVITY_SEGMENT)
-                .addDataType(DataType.TYPE_ACTIVITY_SAMPLES)
-
-                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .addDataType(DataType.AGGREGATE_SPEED_SUMMARY)
-                .addDataType(DataType.AGGREGATE_DISTANCE_DELTA)
-                .addDataType(DataType.AGGREGATE_ACTIVITY_SUMMARY)
-
+                .addDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE)
                 .build();
     }
 
-    private boolean isAuthorised() {
-        boolean authorised = GoogleSignIn.hasPermissions(
-                GoogleSignIn.getLastSignedInAccount(reactContext),
+    private boolean hasPermissions() {
+        return GoogleSignIn.hasPermissions(
+                GoogleSignIn.getLastSignedInAccount(mReactContext),
                 getFitnessOptions()
         );
-        Log.d(TAG, String.format("Is Fit API Authorised? %s", authorised));
-
-        if (!authorised) {
-            Log.wtf(TAG, "YOU DIDN'T HAVE AUTH!");
-            mGoogleSignInManager.requestPermissions(
-                    getCurrentActivity(),
-                    getFitnessOptions(),
-                    new GoogleSignInManager.ResultListener() {
-                        @Override
-                        public void onResult(int resultCode) {
-                            Log.wtf(TAG, String.format("AUTH RESULT: %s", resultCode));
-                            if (resultCode == Activity.RESULT_OK) {
-                                Log.wtf(TAG, "AUTH SUCCESS");
-                                subscribe();
-                            } else if (resultCode == Activity.RESULT_CANCELED) {
-                                Log.wtf(TAG, "AUTH CANCELLED");
-                            }
-                        }
-                    }
-            );
-        } else {
-            Log.wtf(TAG, "YOU ALREADY HAVE AUTH");
-
-            DataSourcesRequest dataSourceRequest = new DataSourcesRequest.Builder()
-                    .setDataTypes(
-                            DataType.TYPE_STEP_COUNT_DELTA,
-                            DataType.TYPE_STEP_COUNT_CADENCE,
-                            DataType.TYPE_SPEED,
-                            DataType.TYPE_DISTANCE_DELTA,
-                            DataType.TYPE_ACTIVITY_SEGMENT,
-                            DataType.TYPE_ACTIVITY_SAMPLES,
-
-                            DataType.AGGREGATE_STEP_COUNT_DELTA,
-                            DataType.AGGREGATE_SPEED_SUMMARY,
-                            DataType.AGGREGATE_DISTANCE_DELTA,
-                            DataType.AGGREGATE_ACTIVITY_SUMMARY
-                    )
-                    .setDataSourceTypes(DataSource.TYPE_DERIVED)
-                    .build();
-
-            ResultCallback<DataSourcesResult> dataSourcesResultCallback = new ResultCallback<DataSourcesResult>() {
-                @Override
-                public void onResult(DataSourcesResult dataSourcesResult) {
-                    for (DataSource dataSource : dataSourcesResult.getDataSources()) {
-                        DataType type = dataSource.getDataType();
-                        Log.i(TAG, "Register Fitness Listener: " + type);
-                    }
-                }
-            };
-
-            GoogleApiClient client = new GoogleApiClient.Builder(reactContext)
-                    .addApi(Fitness.SENSORS_API)
-                    .build();
-
-            client.connect();
-
-            Fitness.SensorsApi
-                    .findDataSources(
-                            client,
-                            dataSourceRequest
-                    )
-                    .setResultCallback(dataSourcesResultCallback);
-        }
-
-        return authorised;
     }
 
-    public void startPedometerUpdatesFromDate(DateTime dateTime) {
-        Log.d(TAG, String.format("Manager Start Pedometer Updates From Date: %s", dateTime));
+    private void authorise() {
+        mGoogleSignInManager.requestPermissions(
+                getCurrentActivity(),
+                getFitnessOptions(),
+                new GoogleSignInManager.ResultListener() {
+                    @Override
+                    public void onResult(int resultCode) {
+                        Log.wtf(TAG, String.format("AUTH RESULT: %s", resultCode));
+                        if (resultCode == Activity.RESULT_OK) {
+                            Log.wtf(TAG, "AUTH SUCCESS");
+                            subscribe();
+                        } else if (resultCode == Activity.RESULT_CANCELED) {
+                            Log.wtf(TAG, "AUTH CANCELLED");
+                        }
+                    }
+                }
+        );
+    }
+
+    private boolean isAuthorised() {
+        boolean authorised = hasPermissions();
+        Log.d(TAG, String.format("Is Fit API Authorised? %s", authorised));
+
+        if (!hasPermissions()) {
+            Log.d(TAG, "LOLWOT YOU DIDN'T HAVE AUTH!");
+            authorise();
+        }
+
+        return hasPermissions();
+    }
+
+    public void startPedometerUpdatesFromDate(DateTime startTime) {
+        Log.d(TAG, String.format("Manager Start Pedometer Updates From Date: %s", startTime));
 
         if (isAuthorised()) {
-            Log.d(TAG, String.format("Authorised: Starting Pedometer Updates from date: %s", dateTime));
+            Log.d(TAG, String.format("Authorised: Starting Pedometer Updates from date: %s", startTime));
 
-            if (isSimulator) {
-                emitEvent(PEDOMETER_UPDATE, getSimulatedPayload(dateTime));
+            if (isSimulator()) {
+                emitEvent(PEDOMETER_UPDATE, getSimulatedPayload(startTime));
             } else {
-                GoogleSignInAccount gsa = GoogleSignIn.getAccountForExtension(reactContext, getFitnessOptions());
+                // TODO get history value from startTime to now
 
-                Fitness.getSensorsClient(reactContext, gsa)
-                        .add(new SensorRequest.Builder()
-                                        .setDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE)
-                                        .setSamplingRate(10, TimeUnit.SECONDS)  // sample once per minute
-                                        .build(),
-                                new OnDataPointListener() {
-                                    @Override
-                                    public void onDataPoint(DataPoint dataPoint) {
-                                        Log.i(TAG, String.format("DATA POINT: %s", dataPoint));
-                                        emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dataPoint));
-                                    }
-                                }
-                        );
-
+                startSensorsClient(mListener = new OnDataPointListener() {
+                    @Override
+                    public void onDataPoint(DataPoint dataPoint) {
+                        emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dataPoint));
+                    }
+                });
             }
         } else {
             Log.d(TAG, "NOT Authorised: Unable to start pedometer updates");
         }
     }
 
+    public void stopPedometerUpdates() {
+        if (isAuthorised()) {
+            Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
+                    .remove(mListener);
+        } else {
+            Log.d(TAG, "NOT Authorised: Unable to stop pedometer updates");
+        }
+    }
+
     private void subscribe() {
-        Fitness.getRecordingClient(reactContext, GoogleSignIn.getLastSignedInAccount(reactContext))
+        startRecordingClient();
+    }
+
+    private void startRecordingClient() {
+        Fitness.getRecordingClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
                 .subscribe(DataType.TYPE_STEP_COUNT_CUMULATIVE)
                 .addOnCompleteListener(
                         new OnCompleteListener<Void>() {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
-                                    Log.wtf(TAG, "Successfully subscribed!");
+                                    Log.wtf(TAG, "Successfully subscribed to TYPE STEP COUNT CUMULATIVE!");
                                 } else {
                                     Log.wtf(TAG, "There was a problem subscribing.", task.getException());
                                 }
@@ -213,7 +163,27 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                 );
     }
 
-    // TODO hook this up to pedometer
+    private void startSensorsClient(OnDataPointListener listener) {
+        Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
+                .add(
+                        new SensorRequest.Builder()
+                                .setDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE) // Can't be omitted.
+                                .setSamplingRate(10, TimeUnit.SECONDS)
+                                .build(),
+                        listener)
+                .addOnCompleteListener(
+                        new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.i(TAG, "Listener registered!");
+                                } else {
+                                    Log.e(TAG, "Listener not registered.", task.getException());
+                                }
+                            }
+                        });
+    }
+
     private WritableMap mapPedometerPayload(DataPoint dataPoint) {
         WritableMap payload = Arguments.createMap();
 
@@ -235,7 +205,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
         return payload;
     }
 
-    private boolean checkIsSimulator() {
+    private boolean isSimulator() {
         return (
                 Build.PRODUCT.toLowerCase().contains("sdk") &&
                         Build.MODEL.toLowerCase().contains("sdk")
@@ -244,7 +214,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
 
     private void emitEvent(String eventName, Object payload) {
-        this.reactContext
+        mReactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(eventName, payload);
     }
