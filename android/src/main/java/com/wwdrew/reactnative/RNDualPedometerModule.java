@@ -17,13 +17,13 @@ public class RNDualPedometerModule extends ReactContextBaseJavaModule {
 
     private static final String REACT_CLASS = "RNDualPedometer";
     private static final String TAG = "RNDualPedometer";
-    private final ReactApplicationContext reactContext;
-    private RNDualPedometerManager rnDualPedometerManager;
+    private final ReactApplicationContext mReactContext;
+    private RNDualPedometerManager mRNDualPedometerManager;
 
     public RNDualPedometerModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        this.reactContext = reactContext;
-        rnDualPedometerManager = new RNDualPedometerManager(this.reactContext);
+        this.mReactContext = reactContext;
+        this.mRNDualPedometerManager = new RNDualPedometerManager(this.mReactContext);
     }
 
     @Override
@@ -45,20 +45,20 @@ public class RNDualPedometerModule extends ReactContextBaseJavaModule {
     public void queryPedometerFromDate(String startTime, String endTime, Promise promise) {
         Log.d(TAG, String.format("queryPedometerFromDate - startTime: %s, endTime: %s", startTime, endTime));
 
-        rnDualPedometerManager.queryPedometerFromDate(new DateTime(startTime), new DateTime(endTime));
+        mRNDualPedometerManager.queryPedometerFromDate(new DateTime(startTime), new DateTime(endTime));
     }
 
     @ReactMethod
     public void startPedometerUpdatesFromDate(String date) {
         Log.d(TAG, String.format("startPedometerUpdatesFromDate: %s", date));
 
-        rnDualPedometerManager.startPedometerUpdatesFromDate(new DateTime(date));
+        mRNDualPedometerManager.startPedometerUpdatesFromDate(new DateTime(date));
     }
 
     @ReactMethod
     public void stopPedometerUpdates() {
         Log.d(TAG, "stopPedometerUpdates");
 
-        rnDualPedometerManager.stopPedometerUpdates();
+        mRNDualPedometerManager.stopPedometerUpdates();
     }
 }
