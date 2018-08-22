@@ -8,12 +8,12 @@ const pedometerEmitter = Platform.select({
 })
 
 const pedometerConstants = Platform.select({
-    android: RNDualPedometer.constants,
-    ios: RNDualPedometerEventEmitter.constants
+    android: RNDualPedometer,
+    ios: RNDualPedometerEventEmitter
 });
 
 export default {
-    constants: pedometerConstants,
+    constants: pedometerConstants.constants,
     addListener(event, callback) {
         pedometerEmitter.addListener(event, callback);
     },
