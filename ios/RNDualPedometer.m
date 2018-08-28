@@ -104,7 +104,11 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 
 - (void) stopPedometerUpdates
 {
+#if TARGET_IPHONE_SIMULATOR
+    NSLog(@"RNDualPedometer - Running on simulator, no need to stop updates");
+#else
     [self.pedometer stopPedometerUpdates];
+#endif
 }
 
 - (NSDictionary *) simulatorPedometerData:(NSDate *)startTime endTime:(NSDate *)endTime
