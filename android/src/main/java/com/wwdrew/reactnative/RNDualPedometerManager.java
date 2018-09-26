@@ -90,8 +90,9 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
             if (isSimulator()) {
                 emitEvent(PEDOMETER_UPDATE, getSimulatedPayload(startTime));
             } else {
-                // TODO get history value from startTime to now
+                final DateTime fStartTime = new DateTime(startTime);
                 DateTime endTime = new DateTime();
+
                 DataReadRequest readRequest = new DataReadRequest.Builder()
                         .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
                         .bucketByActivityType(1, TimeUnit.HOURS)
@@ -112,7 +113,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                                         startSensorsClient(mListener = new OnDataPointListener() {
                                             @Override
                                             public void onDataPoint(DataPoint dataPoint) {
-                                                emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dataPoint));
+                                                emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dataPoint, fStartTime));
                                             }
                                         });
                                     }
@@ -233,7 +234,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                         });
     }
 
-    private WritableMap mapPedometerPayload(DataPoint dataPoint) {
+    private WritableMap mapPedometerPayload(DataPoint dataPoint, DateTime startTime) {
         WritableMap payload = Arguments.createMap();
 
         int dataPointSteps = dataPoint.getValue(Field.FIELD_STEPS).asInt();
@@ -243,7 +244,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
         }
 
         payload.putInt("steps", mInitialSteps + dataPointSteps - mBaseSteps);
-        payload.putString("startTime", new DateTime(dataPoint.getStartTime(TimeUnit.MILLISECONDS)).toString());
+        payload.putString("startTime", startTime.toString());
         payload.putString("endTime", new DateTime(dataPoint.getEndTime(TimeUnit.MILLISECONDS)).toString());
         payload.putString("testing", dataPoint.toString());
 
