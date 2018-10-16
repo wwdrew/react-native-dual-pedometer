@@ -37,8 +37,8 @@ RCT_EXPORT_MODULE();
 }
 
 RCT_REMAP_METHOD(queryPedometerFromDate,
-                 startTime:      (NSDate *)startTime
-                 endTime:        (NSDate *)endTime
+                 startTime:      (NSString *)startTime
+                 endTime:        (NSString *)endTime
                  queryResolver:  (RCTPromiseResolveBlock)resolve
                  queryRejecter:  (RCTPromiseRejectBlock)reject)
 {
@@ -46,7 +46,7 @@ RCT_REMAP_METHOD(queryPedometerFromDate,
 }
 
 RCT_REMAP_METHOD(startPedometerUpdatesFromDate,
-                 startTime:       (NSDate *)startTime
+                 startTime:       (NSString *)startTime
                  eventsResolver:  (RCTPromiseResolveBlock)resolve
                  eventsRejecter:  (RCTPromiseRejectBlock)reject)
 {
@@ -64,7 +64,7 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     resolve(@(YES));
 }
 
-- (void) queryPedometerFromDate:(NSDate *)startTime endTime:(NSDate *)endTime queryResolver:(RCTPromiseResolveBlock)resolve queryRejecter:(RCTPromiseRejectBlock)reject
+- (void) queryPedometerFromDate:(NSString *)startTime endTime:(NSString *)endTime queryResolver:(RCTPromiseResolveBlock)resolve queryRejecter:(RCTPromiseRejectBlock)reject
 {
     NSLog(@"query pedometer start date: %@", startTime);
     NSLog(@"query pedometer end date: %@", endTime);
@@ -74,9 +74,13 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     resolve([self simulatorPedometerData:startTime endTime:endTime]);
 #else
     NSLog(@"Running on device");
+    
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZ"];
+
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.pedometer queryPedometerDataFromDate:startTime
-                                            toDate:endTime
+        [self.pedometer queryPedometerDataFromDate:[dateFormatter dateFromString:startTime]
+                                            toDate:[dateFormatter dateFromString:endTime]
                                        withHandler:^(CMPedometerData *pedometerData, NSError *error) {
                                            if (!error) {
                                                resolve([self devicePedometerData:pedometerData]);
@@ -88,14 +92,18 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 #endif
 }
 
-- (void) startPedometerUpdatesFromDate:(NSDate *)startTime
+- (void) startPedometerUpdatesFromDate:(NSString *)startTime
 {
 #if TARGET_IPHONE_SIMULATOR
     NSLog(@"RNDualPedometer - Running on simulator, generating simulated results");
     [RNDualPedometerEventEmitter pedometerUpdate:[self simulatorPedometerData:startTime endTime:nil]];
 #else
     NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
-    [self.pedometer startPedometerUpdatesFromDate:startTime
+
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZ"];
+
+    [self.pedometer startPedometerUpdatesFromDate:[dateFormatter dateFromString:startTime]
                                       withHandler:^(CMPedometerData *pedometerData, NSError *error) {
                                           [RNDualPedometerEventEmitter pedometerUpdate:[self devicePedometerData:pedometerData]];
                                       }];
