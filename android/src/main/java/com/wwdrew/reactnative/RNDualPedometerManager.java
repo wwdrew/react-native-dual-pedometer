@@ -7,8 +7,10 @@ import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -77,8 +79,32 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     public void onHostDestroy() {
     }
 
-    public void queryPedometerFromDate(DateTime startTime, DateTime endTime) {
+    public void queryPedometerFromDate(DateTime startTime, DateTime endTime, Promise promise) {
         Log.d(TAG, String.format("Manager queryPedometerFromDate - startTime: %s, endTime: %s", startTime, endTime));
+
+        if (isAuthorised()) {
+            DateTime startDateTime = new DateTime(startTime);
+            DateTime endDateTime = new DateTime(endTime);
+
+            DataReadRequest readRequest = new DataReadRequest.Builder()
+                    .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                    .bucketByActivityType(1, TimeUnit.HOURS)
+                    .setTimeRange(startDateTime.getMillis(), endDateTime.getMillis(), TimeUnit.MILLISECONDS)
+                    .build();
+
+            Fitness.getHistoryClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
+                    .readData(readRequest)
+                    .addOnSuccessListener(
+                            new OnSuccessListener<DataReadResponse>() {
+                                @Override
+                                public void onSuccess(DataReadResponse dataReadResponse) {
+                                    promise.resolve(mapDataReadResponse(dataReadResponse));
+                                }
+                            }
+                    );
+        } else {
+            promise.reject("RNDualPedometer", "Not authorised to query pedometer");
+        }
     }
 
     public void startPedometerUpdatesFromDate(DateTime startTime) {
@@ -251,10 +277,30 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
         return payload;
     }
 
+    private WritableMap mapDataReadResponse(DataReadResponse response) {
+        Log.i(TAG, String.format("Number of buckets in response: %d", response.getBuckets().size()));
+        WritableMap results = Arguments.createMap();
+
+        for (Bucket bucket : response.getBuckets()) {
+            Log.i(TAG, String.format("Bucket type is : %s", bucket.getBucketType()));
+            Log.i(TAG, String.format("Bucket activity is : %s", bucket.getActivity() ));
+            Log.i(TAG, String.format("Bucket startTime : %s", bucket.getStartTime(TimeUnit.SECONDS) ));
+            Log.i(TAG, String.format("Bucket endTime is : %s", bucket.getEndTime(TimeUnit.SECONDS) ));
+
+            results.putString("startTime", new DateTime(bucket.getStartTime(TimeUnit.MILLISECONDS)).toString());
+            results.putString("endTime", new DateTime(bucket.getEndTime(TimeUnit.MILLISECONDS)).toString());
+            results.putInt("steps", sumInitialSteps(response));
+        }
+
+        Log.i(TAG, String.format("results: %s", results));
+
+        return results;
+    }
+
     private WritableMap getSimulatedPayload(DateTime dateTime) {
         WritableMap payload = Arguments.createMap();
 
-        payload.putInt("steps", 23456);
+        payload.putInt("steps", 1234);
         payload.putString("startTime", dateTime.toString());
         payload.putString("endTime", new DateTime().toString());
 
