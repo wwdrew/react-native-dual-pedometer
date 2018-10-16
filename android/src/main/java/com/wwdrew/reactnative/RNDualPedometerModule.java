@@ -45,7 +45,7 @@ public class RNDualPedometerModule extends ReactContextBaseJavaModule {
     public void queryPedometerFromDate(String startTime, String endTime, Promise promise) {
         Log.d(TAG, String.format("queryPedometerFromDate - startTime: %s, endTime: %s", startTime, endTime));
 
-        mRNDualPedometerManager.queryPedometerFromDate(DateTime.parse(startTime), DateTime.parse(endTime));
+        mRNDualPedometerManager.queryPedometerFromDate(DateTime.parse(startTime), DateTime.parse(endTime), promise);
     }
 
     @ReactMethod

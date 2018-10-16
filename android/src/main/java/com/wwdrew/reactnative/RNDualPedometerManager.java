@@ -79,7 +79,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     public void onHostDestroy() {
     }
 
-    public void queryPedometerFromDate(DateTime startTime, DateTime endTime, Promise promise) {
+    public void queryPedometerFromDate(DateTime startTime, DateTime endTime, final Promise promise) {
         Log.d(TAG, String.format("Manager queryPedometerFromDate - startTime: %s, endTime: %s", startTime, endTime));
 
         if (isAuthorised()) {
