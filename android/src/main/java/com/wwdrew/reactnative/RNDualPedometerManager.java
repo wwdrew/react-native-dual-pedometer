@@ -88,7 +88,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
             DataReadRequest readRequest = new DataReadRequest.Builder()
                     .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                    .bucketByActivityType(1, TimeUnit.MILLISECONDS)
+                    .bucketByActivityType(1, TimeUnit.SECONDS)
                     .setTimeRange(startDateTime.getMillis(), endDateTime.getMillis(), TimeUnit.MILLISECONDS)
                     .build();
 
@@ -121,7 +121,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
                 DataReadRequest readRequest = new DataReadRequest.Builder()
                         .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                        .bucketByActivityType(1, TimeUnit.MILLISECONDS)
+                        .bucketByActivityType(1, TimeUnit.SECONDS)
                         .setTimeRange(startTime.getMillis(), endTime.getMillis(), TimeUnit.MILLISECONDS)
                         .build();
 
