@@ -107,7 +107,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
         }
     }
 
-    public void startPedometerUpdatesFromDate(DateTime startTime) {
+    public void startPedometerUpdatesFromDate(final DateTime startTime) {
         Log.d(TAG, String.format("Manager Start Pedometer Updates From Date: %s", startTime));
 
         if (isAuthorised()) {
@@ -116,30 +116,23 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
             if (isSimulator()) {
                 emitEvent(PEDOMETER_UPDATE, getSimulatedPayload(startTime));
             } else {
-                final DateTime fStartTime = new DateTime(startTime);
-                DateTime endTime = new DateTime();
-
-                DataReadRequest readRequest = new DataReadRequest.Builder()
-                        .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                        .bucketByActivityType(1, TimeUnit.SECONDS)
-                        .setTimeRange(startTime.getMillis(), endTime.getMillis(), TimeUnit.MILLISECONDS)
-                        .build();
-
                 Fitness.getHistoryClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
-                        .readData(readRequest)
+                        .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
                         .addOnSuccessListener(
-                                new OnSuccessListener<DataReadResponse>() {
+                                new OnSuccessListener<DataSet>() {
                                     @Override
-                                    public void onSuccess(DataReadResponse dataReadResponse) {
+                                    public void onSuccess(DataSet dataSet) {
 
-                                        mInitialSteps = sumInitialSteps(dataReadResponse);
+                                        mInitialSteps = dataSet.isEmpty()
+                                                        ? 0
+                                                        : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
+
                                         Log.i(TAG, String.format("INITIAL STEPS: %s", mInitialSteps));
-//                                        printData(dataReadResponse);
 
                                         startSensorsClient(mListener = new OnDataPointListener() {
                                             @Override
                                             public void onDataPoint(DataPoint dataPoint) {
-                                                emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dataPoint, fStartTime));
+                                                emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dataPoint, new DateTime(startTime)));
                                             }
                                         });
                                     }
@@ -161,7 +154,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
         }
     }
 
-    private static Integer sumInitialSteps(DataReadResponse dataReadResult) {
+    private static Integer sumDataBuckets(DataReadResponse dataReadResult) {
         Integer sum = 0;
 
         Log.i(TAG, "Number of returned buckets of DataSets is: " + dataReadResult.getBuckets().size());
@@ -176,6 +169,8 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                 }
             }
         }
+
+        Log.i(TAG, "Initial steps: " + sum);
 
         return sum;
     }
@@ -267,12 +262,20 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
         if (mBaseSteps == null) {
             mBaseSteps = dataPointSteps;
+            Log.i(TAG, String.format("INITIAL BASE STEPS: %s", mBaseSteps));
         }
 
-        payload.putInt("steps", mInitialSteps + dataPointSteps - mBaseSteps);
+        int stepsSinceStart = mInitialSteps + dataPointSteps - mBaseSteps;
+        payload.putInt("steps", stepsSinceStart);
         payload.putString("startTime", startTime.toString());
         payload.putString("endTime", new DateTime(dataPoint.getEndTime(TimeUnit.MILLISECONDS)).toString());
-        payload.putString("testing", dataPoint.toString());
+        payload.putString("rawResponse", dataPoint.toString());
+        payload.putInt("baseSteps", mBaseSteps);
+        payload.putInt("dataPointSteps", dataPointSteps);
+
+        Log.i(TAG, String.format("PEDOMETER UPDATE: %s", dataPoint));
+        Log.i(TAG, String.format("PEDOMETER VALUE: %s", dataPointSteps));
+        Log.i(TAG, String.format("STEPS SINCE START: %s", stepsSinceStart));
 
         return payload;
     }
@@ -289,9 +292,10 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
             results.putString("startTime", new DateTime(bucket.getStartTime(TimeUnit.MILLISECONDS)).toString());
             results.putString("endTime", new DateTime(bucket.getEndTime(TimeUnit.MILLISECONDS)).toString());
-            results.putInt("steps", sumInitialSteps(response));
+            results.putInt("steps", sumDataBuckets(response));
         }
 
+        results.putString("rawResponse", response.toString());
         Log.i(TAG, String.format("results: %s", results));
 
         return results;
