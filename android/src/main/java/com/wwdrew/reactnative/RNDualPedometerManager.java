@@ -132,7 +132,9 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                                         startSensorsClient(mListener = new OnDataPointListener() {
                                             @Override
                                             public void onDataPoint(DataPoint dataPoint) {
-                                                emitEvent(PEDOMETER_UPDATE, mapPedometerPayload(dataPoint, new DateTime(startTime)));
+                                                WritableMap test = mapPedometerPayload(dataPoint, new DateTime(startTime));
+                                                test.putInt("HISTORY_STEPS", mInitialSteps);
+                                                emitEvent(PEDOMETER_UPDATE, test);
                                             }
                                         });
                                     }
