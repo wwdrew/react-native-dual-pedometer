@@ -69,15 +69,15 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
     NSLog(@"query pedometer start date: %@", startTime);
     NSLog(@"query pedometer end date: %@", endTime);
     
-#if TARGET_IPHONE_SIMULATOR
-    NSLog(@"Running in Simulator");
-    resolve([self simulatorPedometerData:startTime endTime:endTime]);
-#else
-    NSLog(@"Running on device");
-    
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZ"];
 
+#if TARGET_IPHONE_SIMULATOR
+    NSLog(@"Running in Simulator");
+    resolve([self simulatorPedometerData:[dateFormatter dateFromString:startTime] endTime:[dateFormatter dateFromString:endTime]]);
+#else
+    NSLog(@"Running on device");
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.pedometer queryPedometerDataFromDate:[dateFormatter dateFromString:startTime]
                                             toDate:[dateFormatter dateFromString:endTime]
@@ -94,14 +94,14 @@ RCT_REMAP_METHOD(stopPedometerUpdates,
 
 - (void) startPedometerUpdatesFromDate:(NSString *)startTime
 {
-#if TARGET_IPHONE_SIMULATOR
-    NSLog(@"RNDualPedometer - Running on simulator, generating simulated results");
-    [RNDualPedometerEventEmitter pedometerUpdate:[self simulatorPedometerData:startTime endTime:nil]];
-#else
-    NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
-
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZ"];
+
+#if TARGET_IPHONE_SIMULATOR
+    NSLog(@"RNDualPedometer - Running on simulator, generating simulated results");
+    [RNDualPedometerEventEmitter pedometerUpdate:[self simulatorPedometerData:[dateFormatter dateFromString:startTime] endTime:nil]];
+#else
+    NSLog(@"RNDualPedometer - Start Pedometer Updates From Date Function - Start Time: %@", startTime);
 
     [self.pedometer startPedometerUpdatesFromDate:[dateFormatter dateFromString:startTime]
                                       withHandler:^(CMPedometerData *pedometerData, NSError *error) {
