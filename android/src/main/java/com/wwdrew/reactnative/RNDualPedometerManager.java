@@ -148,9 +148,10 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
     public void stopPedometerUpdates() {
         if (isAuthorised()) {
-            Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
-                    .remove(mListener);
             mBaseSteps = null;
+            Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
+                    .remove(mListener)
+                    .getResult();
         } else {
             Log.d(TAG, "NOT Authorised: Unable to stop pedometer updates");
         }
