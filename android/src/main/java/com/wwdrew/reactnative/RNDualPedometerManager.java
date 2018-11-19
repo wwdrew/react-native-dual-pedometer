@@ -47,6 +47,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     private ReactApplicationContext mReactContext;
     private GoogleSignInManager mGoogleSignInManager;
     private OnDataPointListener mListener;
+    private Boolean mShouldUpdate = false;
     private Integer mBaseSteps;
     private Integer mInitialSteps = 0;
 
@@ -132,9 +133,11 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                                         startSensorsClient(mListener = new OnDataPointListener() {
                                             @Override
                                             public void onDataPoint(DataPoint dataPoint) {
-                                                WritableMap test = mapPedometerPayload(dataPoint, new DateTime(startTime));
-                                                test.putInt("HISTORY_STEPS", mInitialSteps);
-                                                emitEvent(PEDOMETER_UPDATE, test);
+                                                if (mShouldUpdate) {
+                                                    WritableMap test = mapPedometerPayload(dataPoint, new DateTime(startTime));
+                                                    test.putInt("HISTORY_STEPS", mInitialSteps);
+                                                    emitEvent(PEDOMETER_UPDATE, test);
+                                                }
                                             }
                                         });
                                     }
@@ -147,10 +150,11 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     }
 
     public void stopPedometerUpdates() {
+        mShouldUpdate = false;
         if (isAuthorised()) {
+            mBaseSteps = null;
             Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
                     .remove(mListener);
-            mBaseSteps = null;
         } else {
             Log.d(TAG, "NOT Authorised: Unable to stop pedometer updates");
         }
@@ -249,6 +253,7 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
+                                    mShouldUpdate = true;
                                     Log.i(TAG, "Listener registered!");
                                 } else {
                                     Log.e(TAG, "Listener not registered.", task.getException());
