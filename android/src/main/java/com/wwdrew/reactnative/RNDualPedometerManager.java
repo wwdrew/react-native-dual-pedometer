@@ -16,6 +16,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
+import com.google.android.gms.fitness.SensorsClient;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
@@ -46,8 +47,8 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
     private ReactApplicationContext mReactContext;
     private GoogleSignInManager mGoogleSignInManager;
+    private SensorsClient mSensorClient;
     private OnDataPointListener mListener;
-    private Boolean mShouldUpdate = false;
     private Integer mBaseSteps;
     private Integer mInitialSteps = 0;
 
@@ -125,19 +126,17 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                                     public void onSuccess(DataSet dataSet) {
 
                                         mInitialSteps = dataSet.isEmpty()
-                                                        ? 0
-                                                        : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
+                                                ? 0
+                                                : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
 
                                         Log.i(TAG, String.format("INITIAL STEPS: %s", mInitialSteps));
 
                                         startSensorsClient(mListener = new OnDataPointListener() {
                                             @Override
                                             public void onDataPoint(DataPoint dataPoint) {
-                                                if (mShouldUpdate) {
-                                                    WritableMap test = mapPedometerPayload(dataPoint, new DateTime(startTime));
-                                                    test.putInt("HISTORY_STEPS", mInitialSteps);
-                                                    emitEvent(PEDOMETER_UPDATE, test);
-                                                }
+                                                WritableMap test = mapPedometerPayload(dataPoint, new DateTime(startTime));
+                                                test.putInt("HISTORY_STEPS", mInitialSteps);
+                                                emitEvent(PEDOMETER_UPDATE, test);
                                             }
                                         });
                                     }
@@ -150,11 +149,9 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     }
 
     public void stopPedometerUpdates() {
-        mShouldUpdate = false;
         if (isAuthorised()) {
             mBaseSteps = null;
-            Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
-                    .remove(mListener);
+            mSensorClient.remove(mListener);
         } else {
             Log.d(TAG, "NOT Authorised: Unable to stop pedometer updates");
         }
@@ -241,7 +238,8 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
     }
 
     private void startSensorsClient(OnDataPointListener listener) {
-        Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext))
+        mSensorClient = Fitness.getSensorsClient(mReactContext, GoogleSignIn.getLastSignedInAccount(mReactContext));
+        mSensorClient
                 .add(
                         new SensorRequest.Builder()
                                 .setDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE) // Can't be omitted.
@@ -253,7 +251,6 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
-                                    mShouldUpdate = true;
                                     Log.i(TAG, "Listener registered!");
                                 } else {
                                     Log.e(TAG, "Listener not registered.", task.getException());
@@ -293,9 +290,9 @@ public class RNDualPedometerManager extends ReactContextBaseJavaModule implement
 
         for (Bucket bucket : response.getBuckets()) {
             Log.i(TAG, String.format("Bucket type is : %s", bucket.getBucketType()));
-            Log.i(TAG, String.format("Bucket activity is : %s", bucket.getActivity() ));
-            Log.i(TAG, String.format("Bucket startTime : %s", bucket.getStartTime(TimeUnit.SECONDS) ));
-            Log.i(TAG, String.format("Bucket endTime is : %s", bucket.getEndTime(TimeUnit.SECONDS) ));
+            Log.i(TAG, String.format("Bucket activity is : %s", bucket.getActivity()));
+            Log.i(TAG, String.format("Bucket startTime : %s", bucket.getStartTime(TimeUnit.SECONDS)));
+            Log.i(TAG, String.format("Bucket endTime is : %s", bucket.getEndTime(TimeUnit.SECONDS)));
 
             results.putString("startTime", new DateTime(bucket.getStartTime(TimeUnit.MILLISECONDS)).toString());
             results.putString("endTime", new DateTime(bucket.getEndTime(TimeUnit.MILLISECONDS)).toString());
