@@ -15,7 +15,7 @@ const pedometerConstants = Platform.select({
 export default {
     constants: pedometerConstants.constants,
     addListener(event, callback) {
-        pedometerEmitter.addListener(event, callback);
+        return pedometerEmitter.addListener(event, callback);
     },
     queryPedometerFromDate(startTime, endTime) {
         return RNDualPedometer.queryPedometerFromDate(startTime, endTime);

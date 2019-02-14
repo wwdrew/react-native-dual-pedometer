@@ -1,3 +1,5 @@
+import { EmitterSubscription } from "react-native";
+
 export interface PedometerResponse {
     startTime: string;
     endTime: string;
@@ -14,7 +16,7 @@ interface PedometerConstants {
 
 declare const RNDualPedometer: {
     constants: PedometerConstants;
-    addListener: (eventName: string, callback: any) => null;
+    addListener: (eventName: string, callback: any) => EmitterSubscription;
     queryPedometerFromDate: (startTime: string, endTime?: string) => Promise<PedometerResponse>;
     startPedometerUpdatesFromDate: (startTime: string) => null;
     stopPedometerUpdates: () => null;
